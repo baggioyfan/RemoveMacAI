@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RemoveMacAI: debloat your Mac</title>
+<meta name="description" content="Turn off Apple Intelligence and delete its models, stop analytics, ads and pop-ups, and get disk space back. Free and open source, and every change can be undone.">
+<meta property="og:title" content="RemoveMacAI: debloat your Mac">
+<meta property="og:description" content="Turn off Apple Intelligence, analytics, ads and pop-ups. See every change first, undo any of it.">
+<meta property="og:image" content="https://omlahore.github.io/RemoveMacAI/screens/og.png">
+<meta property="og:url" content="https://omlahore.github.io/RemoveMacAI/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.png">
+<style>
+  :root {
+    --bg: #fbfbfc;
+    --panel: #ffffff;
+    --ink: #0b0b12;
+    --muted: #5d5d68;
+    --faint: #8a8a96;
+    --line: #e7e7ec;
+    --code: #f2f2f5;
+    --off: #d5d5dc;
+    --button: #0b0b12;
+    --button-ink: #ffffff;
+    --link: #0a64d6;
+    --rainbow: linear-gradient(90deg, #ff9f0a, #ff375f 38%, #bf5af2 68%, #0a84ff);
+    --shadow: 0 30px 80px -30px rgba(11, 11, 18, 0.35), 0 8px 24px -12px rgba(11, 11, 18, 0.18);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0b10;
+      --panel: #14141b;
+      --ink: #f3f3f6;
+      --muted: #a2a2ad;
+      --faint: #6f6f7b;
+      --line: #23232c;
+      --code: #191921;
+      --off: #3a3a45;
+      --button: #f3f3f6;
+      --button-ink: #0b0b12;
+      --link: #5aa9ff;
+      --shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  h1, h2, h3 {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+    text-wrap: balance;
+    margin: 0;
+  }
+  p { margin: 0; text-wrap: pretty; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* Top bar */
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; color: var(--ink); }
+  .brand img { width: 30px; height: 30px; }
+  .bar nav { display: flex; gap: 22px; font-size: 15px; }
+  .bar nav a { color: var(--muted); }
+  .bar nav a:hover { color: var(--ink); text-decoration: none; }
+
+  /* Hero */
+  .hero { padding: 72px 0 0; text-align: center; }
+  .hero img.icon { width: 112px; height: 112px; margin-bottom: 26px; }
+  .hero h1 { font-size: clamp(44px, 7vw, 80px); line-height: 1.02; letter-spacing: -0.03em; font-weight: 750; }
+  .hero p.lede { max-width: 640px; margin: 22px auto 0; font-size: clamp(18px, 2.2vw, 21px); color: var(--muted); }
+  .hero p.credit { margin-top: 14px; font-size: 15px; color: var(--faint); }
+  .hero p.credit a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
+  .button {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 13px 22px; border-radius: 999px; font-weight: 600; font-size: 16px;
+    background: var(--button); color: var(--button-ink);
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s;
+  }
+  .button:hover { text-decoration: none; transform: translateY(-1px); opacity: 0.92; }
+  .button.secondary { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+  .button svg { width: 18px; height: 18px; fill: currentColor; }
+  .stars { color: var(--faint); font-weight: 500; }
+  .terminal { max-width: 720px; margin: 22px auto 0; text-align: left; }
+  .terminal .label { font-size: 14px; color: var(--faint); margin: 0 0 8px 4px; }
+  .cmd {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--code); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 12px 12px 16px; font-size: 14px;
+  }
+  .cmd code { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+  .cmd code::before { content: "$ "; color: var(--faint); }
+  .copy {
+    flex: none; border: 0; border-radius: 8px; padding: 7px 12px; cursor: pointer;
+    font: 600 13px/1 -apple-system, system-ui, sans-serif; background: var(--panel); color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .copy:focus-visible, .button:focus-visible, a:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+  .meta { margin-top: 14px; font-size: 14px; color: var(--faint); }
+
+  .shot { margin: 64px auto 0; max-width: 1040px; }
+  .shot img { width: 100%; height: auto; display: block; filter: drop-shadow(0 30px 50px rgba(11, 11, 18, 0.28)); }
+
+  .press { margin: 56px auto 0; max-width: 760px; text-align: center; color: var(--muted); font-size: 16px; }
+  .press a { color: var(--ink); font-weight: 600; }
+
+  /* Sections */
+  section { padding: 120px 0 0; }
+  .kicker { font-size: 15px; font-weight: 600; color: var(--faint); margin-bottom: 12px; }
+  h2 { font-size: clamp(32px, 4.6vw, 52px); line-height: 1.06; letter-spacing: -0.025em; font-weight: 720; }
+  .intro { max-width: 620px; margin-top: 18px; color: var(--muted); font-size: 19px; }
+
+  /* The switchboard: Apple's features, switching off */
+  .board-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 56px; align-items: center; }
+  .board {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    padding: 6px 0; box-shadow: var(--shadow);
+  }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 22px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row span { font-size: 16px; }
+  .row small { display: block; font-size: 13px; color: var(--faint); }
+  .switch {
+    flex: none; position: relative; width: 46px; height: 28px; border-radius: 999px;
+    background: var(--off); transition: background 0.5s ease;
+  }
+  .switch::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--rainbow);
+    opacity: 0; transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .board.live .switch::before { opacity: 1; }
+  .board.live .switch::after { transform: translateX(18px); }
+  .board.live.done .switch::before { opacity: 0; }
+  .board.live.done .switch::after { transform: none; }
+  .board.live .switch::before, .board.live .switch::after { transition-delay: var(--d, 0s); }
+  .count { margin-top: 26px; font-size: 15px; color: var(--muted); }
+  .count b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* Feature list */
+  .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px 56px; margin-top: 56px; }
+  .groups h3 { font-size: 19px; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .groups p { color: var(--muted); font-size: 16px; }
+
+  /* Screens with text */
+  .pair { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; margin-top: 56px; }
+  .pair.flip { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); }
+  .pair.flip .text { order: 2; }
+  .pair img { width: 100%; height: auto; display: block; filter: drop-shadow(0 24px 40px rgba(11, 11, 18, 0.25)); }
+  .pair h3 { font-size: clamp(24px, 3vw, 32px); letter-spacing: -0.02em; line-height: 1.15; }
+  .pair .text p { margin-top: 14px; color: var(--muted); }
+
+  /* Honesty */
+  .limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 48px; }
+  .limit { border-top: 2px solid var(--ink); padding-top: 18px; }
+  .limit h3 { font-size: 19px; margin-bottom: 8px; }
+  .limit p { color: var(--muted); font-size: 16px; }
+
+  /* Install */
+  .install { margin-top: 48px; display: grid; gap: 30px; }
+  .way { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; padding-top: 30px; border-top: 1px solid var(--line); }
+  .way h3 { font-size: 18px; }
+  .way p { color: var(--muted); font-size: 16px; margin-bottom: 12px; }
+  pre.block {
+    margin: 0; background: var(--code); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; font-size: 14px; overflow-x: auto; line-height: 1.7;
+  }
+
+  footer { margin-top: 140px; padding: 36px 0 56px; border-top: 1px solid var(--line); color: var(--faint); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 860px) {
+    .board-wrap, .pair, .pair.flip { grid-template-columns: 1fr; gap: 36px; }
+    .pair.flip .text { order: 0; }
+    .way { grid-template-columns: 1fr; gap: 10px; }
+    section { padding-top: 88px; }
+    .bar nav a.hide-sm { display: none; }
+  }
+  @media (max-width: 520px) {
+    .wrap { padding: 0 16px; }
+    .hero { padding-top: 48px; }
+    .hero img.icon { width: 88px; height: 88px; }
+    .row { padding: 12px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .switch, .switch::before, .switch::after, .button { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <a class="brand" href="#"><img src="screens/icon.png" alt="">RemoveMacAI</a>
+    <nav>
+      <a class="hide-sm" href="#what">What it does</a>
+      <a class="hide-sm" href="#install">Install</a>
+      <a href="https://github.com/omlahore/RemoveMacAI">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <img class="icon" src="screens/icon.png" alt="RemoveMacAI app icon" width="112" height="112">
+      <h1>Debloat your Mac.</h1>
+      <p class="lede">RemoveMacAI turns off Apple Intelligence and deletes its models. It also switches off Mac Analytics and personalized ads, fixes small things like the wallpaper click that hides every window, and clears out old installers and caches. You see each change before it happens and can undo it later.</p>
+      <p class="credit">Apple Intelligence removal builds on <a href="https://github.com/4evy/pared">pared</a> by 4evy.</p>
+      <div class="ctas">
+        <a class="button" href="https://github.com/omlahore/RemoveMacAI/releases/latest/download/RemoveMacAI.zip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z"/></svg>
+          Download for Mac
+        </a>
+        <a class="button secondary" href="https://github.com/omlahore/RemoveMacAI">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+          GitHub <span class="stars" id="stars"></span>
+        </a>
+      </div>
+      <div class="terminal">
+        <p class="label">Or from Terminal:</p>
+        <div class="cmd">
+          <code>curl -fsSL https://raw.githubusercontent.com/omlahore/RemoveMacAI/main/install.sh | bash -s app</code>
+          <button class="copy" type="button">Copy</button>
+        </div>
+      </div>
+      <p class="meta">Free and open source. Needs macOS 27 and an Apple silicon Mac.</p>
+    </div>
+
+    <figure class="shot">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="screens/overview-dark.webp">
+        <img src="screens/overview-light.webp" alt="The RemoveMacAI app showing the state of this Mac and two presets" width="2000" height="1400">
+      </picture>
+    </figure>
+
+    <p class="press">
+      <a href="https://www.theverge.com/ai-artificial-intelligence/1004672/mac-delete-apple-intelligence-ai-tool">The Verge</a>,
+      <a href="https://arstechnica.com/apple/2026/10/command-line-tool-quickly-removes-apple-intelligence-from-macos-27/">Ars Technica</a>,
+      <a href="https://www.theregister.com/ai-and-ml/2026/10/05/get-rid-of-apples-ai-bloatware-and-reclaim-12-gb-of-storage-with-this-open-source-tool/5301213">The Register</a>,
+      <a href="https://www.macrumors.com/2026/10/05/apple-intelligence-removal-tool-frees-mac-storage/">MacRumors</a>,
+      <a href="https://appleinsider.com/articles/26/10/05/dumb-down-your-mac-save-12gb-by-removing-apple-intelligence">AppleInsider</a> and
+      <a href="https://www.helpnetsecurity.com/2026/10/05/removemacai-turn-off-apple-intelligence/">Help Net Security</a> have written about RemoveMacAI, and
+      <a href="https://daringfireball.net/linked/2026/10/06/cli-tool-removes-apple-intelligence-from-macos-27">Daring Fireball</a> linked to it.
+    </p>
+
+    <section id="what">
+      <div class="board-wrap">
+        <div>
+          <h2>What it turns off</h2>
+          <p class="intro">macOS 27 has no single switch for Apple Intelligence, and turning the features off leaves the models on disk. RemoveMacAI switches each feature off, deletes the models and blocks macOS from downloading them again. If you use one of them, say Writing Tools, keep it on and its models stay.</p>
+          <p class="count"><b id="count">0</b> of 12 switched off</p>
+        </div>
+        <div class="board" id="board" aria-label="Features RemoveMacAI switches off">
+          <div class="row"><span>Siri</span><i class="switch"></i></div>
+          <div class="row"><span>Writing Tools</span><i class="switch"></i></div>
+          <div class="row"><span>Genmoji and Image Playground</span><i class="switch"></i></div>
+          <div class="row"><span>ChatGPT</span><i class="switch"></i></div>
+          <div class="row"><span>Summaries<small>Mail, Messages, Safari, Notes and notifications</small></span><i class="switch"></i></div>
+          <div class="row"><span>Inline text predictions</span><i class="switch"></i></div>
+          <div class="row"><span>Photos Clean Up and Spatial Photos</span><i class="switch"></i></div>
+          <div class="row"><span>Mac Analytics</span><i class="switch"></i></div>
+          <div class="row"><span>Personalized ads</span><i class="switch"></i></div>
+          <div class="row"><span>Spotlight internet results</span><i class="switch"></i></div>
+          <div class="row"><span>Improve Siri recordings</span><i class="switch"></i></div>
+          <div class="row"><span>The media keys</span><i class="switch"></i></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>All 40 settings</h2>
+      <p class="intro">Start from one of the two presets or go through the settings one at a time. Each says what it changes and what you lose, which for most of them is nothing.</p>
+      <div class="groups">
+        <div><h3>Privacy</h3><p>Mac Analytics, personalized ads, Improve Siri and Dictation, Improve Search, Spotlight internet results, Look Up and Safari suggestions, Game Center.</p></div>
+        <div><h3>Annoyances</h3><p>Clicking the wallpaper hiding every window, desktop widgets, the media keys, iPhone Mirroring.</p></div>
+        <div><h3>Apple apps</h3><p>The Music app without the Apple Music store, Books without the Book Store, and the Apple apps you never open out of the Dock.</p></div>
+        <div><h3>Finder</h3><p>Show file extensions, hidden files and the path bar, keep folders on top, stop .DS_Store files on network drives and empty the Trash after 30 days.</p></div>
+        <div><h3>Dock and windows</h3><p>Hide recent apps, drop the auto-hide delay and the bouncing icons, and turn off window animations and the gaps between tiled windows.</p></div>
+        <div><h3>Typing</h3><p>Turn off autocorrect, smart quotes and dashes, the double-space period and automatic capitals, and get key repeat back instead of the accent menu.</p></div>
+        <div><h3>Background items</h3><p>Google's updater and the other helpers apps leave running in the background, each with its own switch.</p></div>
+        <div><h3>Storage</h3><p>Old macOS installers, aerial wallpaper videos, iPhone update files, Xcode leftovers, app caches and Time Machine snapshots. Files go to the Trash, so you can still change your mind.</p></div>
+      </div>
+
+      <div class="pair">
+        <div class="text">
+          <h3>What each setting does</h3>
+          <p>Each row says what the setting changes and warns you when something stops working, like games that need Game Center. Settings with a lock go into one configuration profile, and macOS asks you to approve it.</p>
+        </div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="screens/privacy-dark.webp">
+          <img src="screens/privacy-light.webp" alt="Privacy settings in RemoveMacAI" width="2000" height="1400" loading="lazy">
+        </picture>
+      </div>
+
+      <div class="pair flip">
+        <div class="text">
+          <h3>Review before anything changes</h3>
+          <p>The review sheet lists every change and the exact command behind it. Undo restores the value each setting had before, and removing the profile undoes everything it locked.</p>
+        </div>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="screens/review-dark.webp">
+          <img src="screens/review-light.webp" alt="The review sheet listing changes before they are applied" width="1200" height="1120" loading="lazy">
+        </picture>
+      </div>
+    </section>
+
+    <section>
+      <h2>How it works</h2>
+      <div class="limits">
+        <div class="limit">
+          <h3>System Integrity Protection stays on</h3>
+          <p>RemoveMacAI uses a configuration profile, Apple's own asset service and the same preferences System Settings writes. Nothing under /System is modified.</p>
+        </div>
+        <div class="limit">
+          <h3>Apple's apps stay installed</h3>
+          <p>They live on the sealed system volume, and removing them risks a Mac that won't start. RemoveMacAI quiets them instead and removes the optional apps Apple lets you delete.</p>
+        </div>
+        <div class="limit">
+          <h3>No data collection</h3>
+          <p>RemoveMacAI makes no network requests and collects no data. The source is on GitHub, and every release is built from its tag with a provenance attestation.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <h2>Install</h2>
+      <div class="install">
+        <div class="way">
+          <h3>The app</h3>
+          <div>
+            <p>Paste this in Terminal. It downloads the latest release, checks its checksum, puts RemoveMacAI in Applications and opens it.</p>
+            <div class="cmd"><code>curl -fsSL https://raw.githubusercontent.com/omlahore/RemoveMacAI/main/install.sh | bash -s app</code><button class="copy" type="button">Copy</button></div>
+          </div>
+        </div>
+        <div class="way">
+          <h3>Download</h3>
+          <div>
+            <p><a href="https://github.com/omlahore/RemoveMacAI/releases/latest/download/RemoveMacAI.zip">Download RemoveMacAI.zip</a>, unzip it and drag RemoveMacAI to Applications. The app isn't notarized, so the first time you open it, go to System Settings &gt; Privacy &amp; Security and click Open Anyway.</p>
+          </div>
+        </div>
+        <div class="way">
+          <h3>Command line</h3>
+          <div>
+            <p>The same program, without the app. This command runs it once from a temporary folder and installs nothing.</p>
+            <div class="cmd"><code>curl -fsSL https://raw.githubusercontent.com/omlahore/RemoveMacAI/main/install.sh | bash</code><button class="copy" type="button">Copy</button></div>
+          </div>
+        </div>
+        <div class="way">
+          <h3>Homebrew</h3>
+          <div>
+            <div class="cmd"><code>brew install omlahore/tap/removemacai</code><button class="copy" type="button">Copy</button></div>
+          </div>
+        </div>
+        <div class="way">
+          <h3>For Mac admins</h3>
+          <div>
+            <p>Export the profile and deploy it with Jamf, Kandji, Intune or any MDM.</p>
+            <pre class="block"><code>removemacai export RemoveMacAI.mobileconfig --preset recommended
+removemacai tweaks --json</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>The Apple Intelligence part builds on <a href="https://github.com/4evy/pared">pared</a> by 4evy. MIT licensed.</span>
+    <span>Made by <a href="https://github.com/omlahore">Om Lahore</a> · <a href="https://github.com/omlahore/RemoveMacAI">Source</a> · <a href="https://github.com/omlahore/RemoveMacAI/releases">Releases</a></span>
+  </div>
+</footer>
+
+<script>
+  // Copy buttons
+  document.querySelectorAll(".copy").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var text = button.parentElement.querySelector("code").textContent;
+      navigator.clipboard.writeText(text).then(function () {
+        button.textContent = "Copied";
+        setTimeout(function () { button.textContent = "Copy"; }, 1600);
+      });
+    });
+  });
+
+  // Live star count; the page reads fine without it
+  fetch("https://api.github.com/repos/omlahore/RemoveMacAI")
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (repo) {
+      if (!repo || !repo.stargazers_count) return;
+      var n = repo.stargazers_count;
+      document.getElementById("stars").textContent = "★ " + (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : n);
+    })
+    .catch(function () {});
+
+  // The switchboard starts on and switches off row by row once it's on screen.
+  // Without JavaScript, or with reduced motion, it simply shows everything off.
+  (function () {
+    var board = document.getElementById("board");
+    var count = document.getElementById("count");
+    var rows = board.querySelectorAll(".switch");
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !("IntersectionObserver" in window)) { count.textContent = rows.length; return; }
+    board.classList.add("live");
+    rows.forEach(function (s, i) { s.style.setProperty("--d", (i * 0.11) + "s"); });
+    var seen = false;
+    new IntersectionObserver(function (entries, observer) {
+      if (seen || !entries[0].isIntersecting) return;
+      seen = true;
+      observer.disconnect();
+      setTimeout(function () {
+        board.classList.add("done");
+        var n = 0;
+        var tick = setInterval(function () {
+          n += 1;
+          count.textContent = n;
+          if (n >= rows.length) clearInterval(tick);
+        }, 110);
+      }, 400);
+    }, { threshold: 0.45 }).observe(board);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build -c release --arch arm64
+      - name: Self-test
+        run: "$(swift build -c release --arch arm64 --show-bin-path)/removemacai selftest"
+      - name: Package
+        run: |
+          mkdir -p stage dist
+          cp "$(swift build -c release --arch arm64 --show-bin-path)/removemacai" LICENSE THIRD-PARTY-NOTICES.md stage/
+          COPYFILE_DISABLE=1 tar -czf dist/removemacai-darwin-arm64.tar.gz -C stage removemacai LICENSE THIRD-PARTY-NOTICES.md
+          tools/build-app.sh
+          ditto -c -k --keepParent .build/RemoveMacAI.app dist/RemoveMacAI.zip
+          cd dist
+          shasum -a 256 removemacai-darwin-arm64.tar.gz > removemacai-darwin-arm64.tar.gz.sha256
+          shasum -a 256 RemoveMacAI.zip > RemoveMacAI.zip.sha256
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/removemacai-darwin-arm64.tar.gz
+            dist/RemoveMacAI.zip
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="## $version" '$0 == v {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md

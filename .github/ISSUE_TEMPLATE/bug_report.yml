@@ -1,0 +1,34 @@
+name: Bug report
+description: Something RemoveMacAI did, or didn't do, on your Mac
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected and what you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: status
+    attributes:
+      label: Output of removemacai status
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and build
+      description: The output of `sw_vers`, for example 27.0.1 (26B50).
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed it
+      options:
+        - Homebrew
+        - One-line installer
+        - Built from source
+    validations:
+      required: true
