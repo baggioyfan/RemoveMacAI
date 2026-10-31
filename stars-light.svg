@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif">
+<text x="64" y="28" font-size="16" font-weight="600" fill="#1f2328">Stars over time</text>
+<text x="776" y="28" font-size="14" text-anchor="end" fill="#59636e">1 stars</text>
+<line x1="64" x2="776" y1="352.0" y2="352.0" stroke="#d1d9e0"/>
+<text x="54" y="356.0" font-size="12" text-anchor="end" fill="#59636e">0</text>
+<line x1="64" x2="776" y1="276.0" y2="276.0" stroke="#d1d9e0"/>
+<text x="54" y="280.0" font-size="12" text-anchor="end" fill="#59636e">250</text>
+<line x1="64" x2="776" y1="200.0" y2="200.0" stroke="#d1d9e0"/>
+<text x="54" y="204.0" font-size="12" text-anchor="end" fill="#59636e">500</text>
+<line x1="64" x2="776" y1="124.0" y2="124.0" stroke="#d1d9e0"/>
+<text x="54" y="128.0" font-size="12" text-anchor="end" fill="#59636e">750</text>
+<line x1="64" x2="776" y1="48.0" y2="48.0" stroke="#d1d9e0"/>
+<text x="54" y="52.0" font-size="12" text-anchor="end" fill="#59636e">1,000</text>
+<text x="64.0" y="374" font-size="12" text-anchor="middle" fill="#59636e">Oct 14</text>
+<text x="188.3" y="374" font-size="12" text-anchor="middle" fill="#59636e">Oct 17</text>
+<text x="312.6" y="374" font-size="12" text-anchor="middle" fill="#59636e">Oct 20</text>
+<text x="436.9" y="374" font-size="12" text-anchor="middle" fill="#59636e">Oct 23</text>
+<text x="561.1" y="374" font-size="12" text-anchor="middle" fill="#59636e">Oct 26</text>
+<text x="685.4" y="374" font-size="12" text-anchor="middle" fill="#59636e">Oct 29</text>
+<polygon points="64,352 64.0,351.7 776.0,351.7 776.0,352" fill="#0969da" fill-opacity="0.12"/>
+<polyline points="64.0,351.7 776.0,351.7" fill="none" stroke="#0969da" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>
